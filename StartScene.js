@@ -54,12 +54,14 @@ export class StartScene extends Phaser.Scene {
         this.titleDice = [];
         this.isTutorialEnabled = false;
         this.isHardModeEnabled = false;
+        this.isNightmareModeEnabled = false;
         this.tutorialToggleContainer = null;
         this.tutorialToggleBox = null;
         this.tutorialToggleCheckmark = null;
-        this.hardModeToggleContainer = null;
-        this.hardModeToggleBox = null;
-        this.hardModeToggleCheckmark = null;
+        this.difficultyContainer = null;
+        this.difficultyLabel = null;
+        this.difficultyMinus = null;
+        this.difficultyPlus = null;
     }
 
     preload() {
@@ -115,7 +117,7 @@ export class StartScene extends Phaser.Scene {
         this.titleDice.length = 0;
 
         const lines = ['DROP', '+', 'ROLL'];
-        const titleY = 120;
+        const titleY = 60;
         const letterHeight = this.getLetterHeight();
 
         lines.forEach((line, index) => {
@@ -126,7 +128,7 @@ export class StartScene extends Phaser.Scene {
         });
 
         const lastLineBottom = titleY + (lines.length - 1) * (letterHeight + this.lineSpacing) + letterHeight;
-        const buttonY = lastLineBottom + this.dieSize * 3;
+        const buttonY = lastLineBottom + this.dieSize * 3 + 44;
 
         const button = this.add.text(width / 2, buttonY, 'PLAY', {
             fontFamily: 'monospace',
@@ -136,8 +138,8 @@ export class StartScene extends Phaser.Scene {
             align: 'center'
         }).setOrigin(0.5);
 
-        this.createHardModeToggle(button);
-        this.createTutorialToggle(button);
+        this.createDifficultyControl(button);
+        this.createTutorialToggleBelow(button);
 
         button.setInteractive({ useHandCursor: true })
             .on('pointerover', () => {
@@ -153,12 +155,157 @@ export class StartScene extends Phaser.Scene {
                 this.cameras.main.once('camerafadeoutcomplete', () => {
                     this.scene.start('GameScene', {
                         tutorialEnabled: this.isTutorialEnabled,
-                        hardModeEnabled: this.isHardModeEnabled
+                        hardModeEnabled: this.isHardModeEnabled,
+                        nightmareModeEnabled: this.isNightmareModeEnabled
                     });
                 }, this);
         
                 this.cameras.main.fadeOut(transitionDuration, 25, 25, 37);
             });
+    }
+
+    createDifficultyControl(button) {
+        if (!button) {
+            return;
+        }
+
+        const { x: bx, y: by } = button;
+        const containerY = by - 56;
+
+        const container = this.add.container(bx, containerY);
+
+        const bg = this.add.rectangle(0, 0, 360, 56, 0x000000, 0)
+            .setOrigin(0.5);
+
+        const minus = this.add.text(-120, 0, '-', {
+            fontFamily: 'monospace',
+            fontSize: '64px',
+            color: '#f1c40f'
+        }).setOrigin(0.5);
+
+        const label = this.add.text(0, 0, 'Normal', {
+            fontFamily: 'monospace',
+            fontSize: '32px',
+            color: '#f1c40f',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+
+        const plus = this.add.text(120, 0, '+', {
+            fontFamily: 'monospace',
+            fontSize: '64px',
+            color: '#f1c40f'
+        }).setOrigin(0.5);
+
+        container.add(bg);
+        container.add(minus);
+        container.add(label);
+        container.add(plus);
+
+        // Use the text objects' local positions and display sizes for hit areas
+        const minusHitW = Math.max(72, Math.ceil(minus.displayWidth + 12));
+        const minusHitH = Math.max(56, Math.ceil(minus.displayHeight + 8));
+        const plusHitW = Math.max(72, Math.ceil(plus.displayWidth + 12));
+        const plusHitH = Math.max(56, Math.ceil(plus.displayHeight + 8));
+
+        const minusHit = this.add.rectangle(minus.x, minus.y, minusHitW, minusHitH, 0x000000, 0)
+            .setOrigin(0.5)
+            .setInteractive({ useHandCursor: true });
+        const plusHit = this.add.rectangle(plus.x, plus.y, plusHitW, plusHitH, 0x000000, 0)
+            .setOrigin(0.5)
+            .setInteractive({ useHandCursor: true });
+
+        // add hit areas after so they receive pointer events, over the bg but under text visually
+        container.add(minusHit);
+        container.add(plusHit);
+
+        minusHit.on('pointerdown', () => this.decreaseDifficulty());
+        plusHit.on('pointerdown', () => this.increaseDifficulty());
+
+        minusHit.on('pointerover', () => minus.setScale(1.2));
+        minusHit.on('pointerout', () => minus.setScale(1));
+        plusHit.on('pointerover', () => plus.setScale(1.2));
+        plusHit.on('pointerout', () => plus.setScale(1));
+
+        this.difficultyContainer = container;
+        this.difficultyLabel = label;
+        this.difficultyMinus = minusHit;
+        this.difficultyPlus = plusHit;
+        this.difficultyMinusText = minus;
+        this.difficultyPlusText = plus;
+
+        this.updateDifficultyUI();
+    }
+    increaseDifficulty() {
+        if (!this.isHardModeEnabled && !this.isNightmareModeEnabled) {
+            // Normal -> Hard
+            this.isHardModeEnabled = true;
+            this.isNightmareModeEnabled = false;
+        } else if (this.isHardModeEnabled && !this.isNightmareModeEnabled) {
+            // Hard -> Nightmare
+            this.isNightmareModeEnabled = true;
+            this.isHardModeEnabled = true; // ensure hard stays true
+        }
+        this.updateDifficultyUI();
+    }
+
+    decreaseDifficulty() {
+        if (this.isNightmareModeEnabled) {
+            // Nightmare -> Hard
+            this.isNightmareModeEnabled = false;
+            this.isHardModeEnabled = true;
+        } else if (this.isHardModeEnabled && !this.isNightmareModeEnabled) {
+            // Hard -> Normal
+            this.isHardModeEnabled = false;
+            this.isNightmareModeEnabled = false;
+        }
+        this.updateDifficultyUI();
+    }
+
+    updateDifficultyUI() {
+        if (!this.difficultyLabel) return;
+
+        let current = 'Normal';
+        if (this.isNightmareModeEnabled) current = 'Nightmare';
+        else if (this.isHardModeEnabled) current = 'Hard';
+        this.difficultyLabel.setText(current);
+
+        // set label color per difficulty
+        const normalColor = '#f1c40f';
+        const hardColor = '#ff8c00';
+        const nightmareColor = '#ff3b3b';
+        let labelColor = normalColor;
+        if (this.isNightmareModeEnabled) labelColor = nightmareColor;
+        else if (this.isHardModeEnabled) labelColor = hardColor;
+        if (this.difficultyLabel && typeof this.difficultyLabel.setColor === 'function') {
+            this.difficultyLabel.setColor(labelColor);
+        } else if (this.difficultyLabel && this.difficultyLabel.setStyle) {
+            this.difficultyLabel.setStyle({ color: labelColor });
+        }
+
+        const showPlus = !this.isNightmareModeEnabled;
+        const showMinus = this.isHardModeEnabled || this.isNightmareModeEnabled;
+
+        if (this.difficultyPlus) {
+            if (showPlus) this.difficultyPlus.setInteractive({ useHandCursor: true });
+            else this.difficultyPlus.disableInteractive();
+        }
+        if (this.difficultyMinus) {
+            if (showMinus) this.difficultyMinus.setInteractive({ useHandCursor: true });
+            else this.difficultyMinus.disableInteractive();
+        }
+
+        if (this.difficultyContainer) {
+            if (this.difficultyPlusText) this.difficultyPlusText.setAlpha(showPlus ? 1 : 0.25);
+            if (this.difficultyMinusText) this.difficultyMinusText.setAlpha(showMinus ? 1 : 0.25);
+        }
+    }
+
+    setNightmareMode(enabled) {
+        this.isNightmareModeEnabled = !!enabled;
+        if (this.isNightmareModeEnabled) {
+            this.isHardModeEnabled = true;
+        }
+        this.updateDifficultyUI();
     }
 
     createCheckboxToggle(button, labelText, { align = 'right', margin = 80, onToggle } = {}) {
@@ -241,30 +388,53 @@ export class StartScene extends Phaser.Scene {
         this.updateTutorialCheckbox();
     }
 
-    createHardModeToggle(button) {
-        const toggle = this.createCheckboxToggle(button, 'Hard Mode', {
-            align: 'left',
-            onToggle: () => this.toggleHardModeCheckbox()
-        });
+    createTutorialToggleBelow(button) {
+        if (!button) return;
 
-        if (!toggle) {
-            return;
-        }
+        // Reuse the checkbox builder but place it centered below the play button
+        const container = this.add.container(button.x + 20, button.y + 68);
 
-        this.hardModeToggleContainer = toggle.container;
-        this.hardModeToggleBox = toggle.box;
-        this.hardModeToggleCheckmark = toggle.checkmark;
-        this.updateHardModeCheckbox();
+        const checkboxSize = 32;
+        const label = this.add.text(0, 0, 'Tutorial', {
+            fontFamily: 'monospace',
+            fontSize: '28px',
+            color: '#f1c40f',
+            fontStyle: 'bold'
+        }).setOrigin(0.5, 0.5);
+
+        const box = this.add.rectangle(-80, 0, checkboxSize, checkboxSize, 0x000000, 0)
+            .setStrokeStyle(3, 0xf1c40f, 0.85)
+            .setOrigin(0.5);
+
+        const checkmark = this.add.text(box.x + 2, box.y - 2, '✔', {
+            fontFamily: 'monospace',
+            fontSize: '32px',
+            align: 'center',
+            color: '#f1c40f'
+        }).setOrigin(0.5);
+        checkmark.setVisible(this.isTutorialEnabled);
+
+        const hitArea = this.add.rectangle(0, 0, 220, 56, 0x000000, 0)
+            .setOrigin(0.5)
+            .setInteractive({ useHandCursor: true });
+
+        hitArea.on('pointerdown', () => this.toggleTutorialCheckbox());
+        hitArea.on('pointerover', () => box.setFillStyle(0xf1c40f, 0.12));
+        hitArea.on('pointerout', () => box.setFillStyle(0x000000, 0));
+
+        container.add(hitArea);
+        container.add(box);
+        container.add(checkmark);
+        container.add(label);
+
+        this.tutorialToggleContainer = container;
+        this.tutorialToggleBox = box;
+        this.tutorialToggleCheckmark = checkmark;
     }
 
     toggleTutorialCheckbox() {
         this.isTutorialEnabled = !this.isTutorialEnabled;
         this.updateTutorialCheckbox();
-    }
-
-    toggleHardModeCheckbox() {
-        this.isHardModeEnabled = !this.isHardModeEnabled;
-        this.updateHardModeCheckbox();
     }
 
     updateTutorialCheckbox() {
@@ -278,16 +448,6 @@ export class StartScene extends Phaser.Scene {
         }
     }
 
-    updateHardModeCheckbox() {
-        if (this.hardModeToggleCheckmark) {
-            this.hardModeToggleCheckmark.setVisible(this.isHardModeEnabled);
-        }
-
-        if (this.hardModeToggleBox) {
-            const fillAlpha = this.isHardModeEnabled ? 0.2 : 0;
-            this.hardModeToggleBox.setFillStyle(0xf1c40f, fillAlpha);
-        }
-    }
 
     getLetterHeight() {
         const sample = LETTER_PATTERNS.D;

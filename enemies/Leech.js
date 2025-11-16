@@ -1,14 +1,13 @@
 import { BaseEnemy } from './BaseEnemy.js';
 import { attackAction, burnAction, defendAction, healAction, nullifyAction } from './EnemyActions.js';
 
-const BASE_NULLIFY_COUNT = 2;
-const MAX_NULLIFY_COUNT = 4;
+// compute counts at runtime per-instance (this.isNightmare not available at module scope)
 
 export class LeechEnemy extends BaseEnemy {
     constructor() {
         super({ name: 'Leech', maxHealth: 88 });
 
-        this.nullifyCount = BASE_NULLIFY_COUNT;
+        this.nullifyCount = this.isNightmare ? 3 : 2;
 
         this.moves = [
             {
@@ -30,7 +29,8 @@ export class LeechEnemy extends BaseEnemy {
                 key: 'leech_attack_heal_large',
                 label: 'Gluttonous Feast: Attack 10 + Heal 10',
                 createActions: () => {
-                    this.nullifyCount = Math.min(MAX_NULLIFY_COUNT, this.nullifyCount + 1);
+                    const maxNullify = this.isNightmare ? 5 : 4;
+                    this.nullifyCount = Math.min(maxNullify, this.nullifyCount + 1);
                     return [attackAction(10), healAction(10)];
                 }
             }

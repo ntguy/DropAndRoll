@@ -325,6 +325,7 @@ export class GameScene extends Phaser.Scene {
         this.rollsRemaining = CONSTANTS.DEFAULT_MAX_ROLLS;
         this.rollsRemainingAtTurnStart = CONSTANTS.DEFAULT_MAX_ROLLS;
         this.hardModeEnabled = false;
+        this.nightmareModeEnabled = false;
         this.difficultyKey = DEFAULT_DIFFICULTY;
         const initialDifficulty = DIFFICULTY_PRESETS[this.difficultyKey]
             || DIFFICULTY_PRESETS[DEFAULT_DIFFICULTY]
@@ -628,6 +629,7 @@ export class GameScene extends Phaser.Scene {
         }
         this.tutorialEnabled = !!(data && data.tutorialEnabled);
         this.hardModeEnabled = !!(data && data.hardModeEnabled);
+        this.nightmareModeEnabled = !!(data && data.nightmareModeEnabled);
         this.applyDifficultySettings();
         this.shownTutorialKeys = new Set();
         this.tutorialQueue = [];
@@ -4639,6 +4641,18 @@ export class GameScene extends Phaser.Scene {
             ? config.createEnemies
             : null;
         const enemies = enemyFactory ? enemyFactory() : [];
+        // Propagate nightmare flag into enemy instances so enemies can adapt behavior
+        if (Array.isArray(enemies) && enemies.length > 0) {
+            for (const e of enemies) {
+                try {
+                    if (e && typeof e === 'object') {
+                        e.isNightmare = !!this.nightmareModeEnabled;
+                    }
+                } catch (err) {
+                    // defensive: ignore any errors setting the flag
+                }
+            }
+        }
         if (this.enemyManager && typeof this.enemyManager.setEnemies === 'function') {
             this.enemyManager.setEnemies(Array.isArray(enemies) ? enemies : []);
         }

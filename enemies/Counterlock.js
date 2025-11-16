@@ -4,7 +4,7 @@ import { attackAction, defendAction, healAction } from './EnemyActions.js';
 const DAMAGE_LOCK_THRESHOLD = 20;
 const LOCK_COUNT = 2;
 const BASE_HEAL_AMOUNT = 0;
-const HEAL_INCREMENT = 5;
+// runtime increment: compute per-instance inside createActions (this.isNightmare not available at module scope)
 
 export class CounterlockEnemy extends BaseEnemy {
     constructor() {
@@ -22,7 +22,8 @@ export class CounterlockEnemy extends BaseEnemy {
                 key: 'counterlock_recover',
                 label: () => `Guarded Recovery: Heal ${this.healAmount} + Defend 5`,
                 createActions: () => {
-                    this.healAmount += HEAL_INCREMENT;
+                    const increment = this.isNightmare ? 6 : 5;
+                    this.healAmount += increment;
                     return [healAction(this.healAmount), defendAction(5)];
                 }
             },

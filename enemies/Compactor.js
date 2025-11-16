@@ -13,9 +13,7 @@ const ZONAL_CRUSH_MAX_VALUES = [4, 3];
 const BASE_ATTACK_VALUE = 15;
 const FINAL_ATTACK_VALUE = 20;
 const BASE_DEFEND_VALUE = 15;
-const DEFEND_INCREMENT = 5;
 const BASE_HEAL_VALUE = 10;
-const HEAL_INCREMENT = 5;
 const BURN_VALUE = 10;
 const CROWD_CONTROL_COUNT = 2;
 
@@ -106,8 +104,9 @@ export class CompactorEnemy extends BaseEnemy {
             label: 'Cataclysmic Press: Attack 20',
             createActions: ({ isPreview } = {}) => {
                 if (!isPreview) {
-                    this.defendValue += DEFEND_INCREMENT;
-                    this.healValue += HEAL_INCREMENT;
+                    const increment = this.isNightmare ? 7 : 5;
+                    this.defendValue += increment;
+                    this.healValue += increment;
                     this.loopCount += 1;
                 }
                 return [attackAction(FINAL_ATTACK_VALUE)];

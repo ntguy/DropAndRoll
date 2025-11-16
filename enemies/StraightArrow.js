@@ -20,8 +20,8 @@ export class StraightArrowEnemy extends BaseEnemy {
             },
             {
                 key: 'straight_arrow_heal',
-                label: 'Second Wind: Heal 10',
-                actions: [healAction(10)]
+                label: `Second Wind: Heal ${this.isNightmare ? 15 : 10}`,
+                actions: [healAction(this.isNightmare ? 15 : 10)]
             },
             {
                 key: 'straight_arrow_burn',

@@ -23,7 +23,8 @@ export class HotfixEnemy extends BaseEnemy {
                 key: 'burn_defend_loop',
                 label: () => `Burn ${this.scalingBurnValue} + Defend 10`,
                 createActions: () => {
-                    this.scalingBurnValue += 1;
+                    const increment = this.isNightmare ? 2 : 1;
+                    this.scalingBurnValue += increment;
                     return [
                         burnAction(this.scalingBurnValue),
                         defendAction(10)

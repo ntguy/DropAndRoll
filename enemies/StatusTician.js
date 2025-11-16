@@ -74,6 +74,14 @@ export class StatusTicianEnemy extends BaseEnemy {
         super({ name: 'Status-tician', maxHealth: 250, moves: [] });
 
         this.defaultMaxDicePerZone = DEFAULT_MAX_DICE_PER_ZONE;
+
+        // Instance-level scaling tweaks for Nightmare mode
+        this._isNightmare = !!this.isNightmare;
+        this._barrageBaseAttack = this._isNightmare ? (BARRAGE_INITIAL_ATTACK + 2) : BARRAGE_INITIAL_ATTACK;
+        this._barrageBaseDefend = this._isNightmare ? (BARRAGE_INITIAL_DEFEND + 2) : BARRAGE_INITIAL_DEFEND;
+        this._barrageIncrementSeries = this._isNightmare ? [3, 4] : [2, 3];
+        this._controlEffectCount = this._isNightmare ? (CONTROL_EFFECT_COUNT + 1) : CONTROL_EFFECT_COUNT;
+
         this.resetEncounterState();
     }
 
@@ -83,9 +91,9 @@ export class StatusTicianEnemy extends BaseEnemy {
         this.barrageMoveToggle = 0;
         this.barrageMoveCounter = 0;
         this.barrageLoopCount = 0;
-        this.barrageAttackValue = BARRAGE_INITIAL_ATTACK;
-        this.barrageDefendValue = BARRAGE_INITIAL_DEFEND;
-        this.barrageIncrementSeries = [2, 3];
+        this.barrageAttackValue = this._barrageBaseAttack;
+        this.barrageDefendValue = this._barrageBaseDefend;
+        this.barrageIncrementSeries = Array.isArray(this._barrageIncrementSeries) ? [...this._barrageIncrementSeries] : [2, 3];
         this.barrageNextIncrementIndex = 0;
 
         this.activeBasicStatus = null;
@@ -164,7 +172,7 @@ export class StatusTicianEnemy extends BaseEnemy {
             key,
             label,
             createActions: () => {
-                const controlAction = this.createRandomControlAction(CONTROL_EFFECT_COUNT);
+                const controlAction = this.createRandomControlAction(this._controlEffectCount || CONTROL_EFFECT_COUNT);
                 return [
                     attackAction(attackValue),
                     defendAction(defendValue),
@@ -195,7 +203,7 @@ export class StatusTicianEnemy extends BaseEnemy {
             key,
             label,
             createActions: () => {
-                const controlAction = this.createRandomControlAction(CONTROL_EFFECT_COUNT);
+                const controlAction = this.createRandomControlAction(this._controlEffectCount || CONTROL_EFFECT_COUNT);
                 return [
                     attackAction(attackValue),
                     controlAction
@@ -498,7 +506,7 @@ export class StatusTicianEnemy extends BaseEnemy {
         const defendValue = this.barrageDefendValue;
 
         if (this.barrageMoveToggle === 0) {
-            const controlAction = this.createRandomControlAction(CONTROL_EFFECT_COUNT);
+            const controlAction = this.createRandomControlAction(this._controlEffectCount || CONTROL_EFFECT_COUNT);
             const move = {
                 key: `status_tician_barrage_strike_${this.barrageMoveCounter}`,
                 label: `Barrage Strike: Attack ${attackValue} + Defend ${defendValue} + Control 1 Die`,

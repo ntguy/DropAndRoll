@@ -69,11 +69,6 @@ export class PathManager {
         if (this.frontier.length === 0 && this.nodes.length > 0) {
             this.frontier = [this.nodes[0].id];
         }
-
-                // Debug log to verify
-        console.log('START node:', startNode);
-        console.log('Frontier:', this.frontier);
-        console.log('Row 0 nodes:', this.nodes.filter(n => n.row === 0));
     }
 
     getFacilityTypesForEnemyIndex(enemyIndex) {

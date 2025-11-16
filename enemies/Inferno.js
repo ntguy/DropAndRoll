@@ -41,5 +41,11 @@ export class InfernoEnemy extends BaseEnemy {
                 }
             ]
         });
+        // adjust health for nightmare mode if applicable
+        if (this.isNightmare) {
+            this.maxHealth = 125;
+            this.baseMaxHealth = 125;
+            this.health = Math.min(this.health, this.maxHealth);
+        }
     }
 }

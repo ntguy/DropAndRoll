@@ -30,7 +30,8 @@ export class AuditorEnemy extends BaseEnemy {
                 key: 'auditor_burn_defend',
                 label: () => `Burn ${this.burnDefendValue} + Defend ${this.burnDefendValue}`,
                 createActions: () => {
-                    this.burnDefendValue += 4;
+                    const scaling = this.isNightmare ? 6 : 4;
+                    this.burnDefendValue += scaling;
                     return [burnAction(this.burnDefendValue), defendAction(this.burnDefendValue)];
                 }
             },

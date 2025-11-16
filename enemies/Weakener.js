@@ -33,8 +33,8 @@ export class WeakenerEnemy extends BaseEnemy {
                 key: 'weakener_heal',
                 label: `Rejuvenate: Heal 20, Attack ${this.attackValue - 10}`,
                 createActions: () => {
-                    this.attackValue += 5;
-                    this.defendValue += 5;
+                    this.attackValue += this.isNightmare ? 7 : 5;
+                    this.defendValue += this.isNightmare ? 7 : 5;
                     return [healAction(20), attackAction(this.attackValue - 15)];
                 }
             }

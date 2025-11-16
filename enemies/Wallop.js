@@ -29,7 +29,7 @@ export class WallopEnemy extends BaseEnemy {
         }
 
         const attackValue = this._scalingAttackValue;
-        this._scalingAttackValue += 5;
+        this._scalingAttackValue += this.isNightmare ? 7 : 5;
         return {
             key: `wallop_escalating_${attackValue}`,
             label: `Attack for ${attackValue}`,

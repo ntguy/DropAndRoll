@@ -8,8 +8,8 @@ export class LockdownEnemy extends BaseEnemy {
         this.baseDefensePerReroll = 1;
         this.defensePerReroll = this.baseDefensePerReroll;
         this.currentDefenseBonus = 0;
-        this.baseBurnValue = 8;
-        this.burnValueIncrement = 2;
+        this.baseBurnValue = this.isNightmare ? 6 : 8;
+        this.burnValueIncrement = this.isNightmare ? 4 : 2;
         this.currentBurnValue = this.baseBurnValue;
 
         const createMove = ({ key, title, components, actions, createActions }) => {
@@ -78,12 +78,12 @@ export class LockdownEnemy extends BaseEnemy {
                 components: [
                     { type: 'defend', value: 8 },
                     { type: 'attack', value: 8 },
-                    { type: 'lock', value: 1 },
+                    { type: 'lock', value: this.isNightmare ? 2 : 1 },
                     { type: 'weaken', value: 1 }
                 ],
                 createActions: () => {
                     this.defensePerReroll += 1;
-                    return [defendAction(10), lockAction(1), weakenAction(1)];
+                    return [defendAction(10), lockAction(this.isNightmare ? 2 : 1), weakenAction(1)];
                 }
             });
 

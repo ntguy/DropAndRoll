@@ -31,7 +31,8 @@ export class SlapperEnemy extends BaseEnemy {
                 label: `Heal ${this._healAmount}`,
                 actions: [healAction(this._healAmount)]
             };
-            this._healAmount += 2;
+            const increment = this.isNightmare ? 4 : 2;
+            this._healAmount += increment;
         }
 
         this._seqIndex = (this._seqIndex + 1) % this._sequence.length;
