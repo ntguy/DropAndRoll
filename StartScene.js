@@ -58,6 +58,7 @@ export class StartScene extends Phaser.Scene {
         this.tutorialToggleContainer = null;
         this.tutorialToggleBox = null;
         this.tutorialToggleCheckmark = null;
+        this.isSpeedrunEnabled = false;
         this.difficultyContainer = null;
         this.difficultyLabel = null;
         this.difficultyMinus = null;
@@ -139,7 +140,10 @@ export class StartScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         this.createDifficultyControl(button);
+        // Create tutorial toggle slightly left to make room for speedrun toggle
         this.createTutorialToggleBelow(button);
+        // Add speedrun checkbox to the left of the tutorial
+        this.createSpeedrunToggleBelow(button);
 
         button.setInteractive({ useHandCursor: true })
             .on('pointerover', () => {
@@ -156,7 +160,8 @@ export class StartScene extends Phaser.Scene {
                     this.scene.start('GameScene', {
                         tutorialEnabled: this.isTutorialEnabled,
                         hardModeEnabled: this.isHardModeEnabled,
-                        nightmareModeEnabled: this.isNightmareModeEnabled
+                        nightmareModeEnabled: this.isNightmareModeEnabled,
+                        speedrunEnabled: this.isSpeedrunEnabled
                     });
                 }, this);
         
@@ -392,7 +397,7 @@ export class StartScene extends Phaser.Scene {
         if (!button) return;
 
         // Reuse the checkbox builder but place it centered below the play button
-        const container = this.add.container(button.x + 20, button.y + 68);
+        const container = this.add.container(button.x + 180, button.y + 68);
 
         const checkboxSize = 32;
         const label = this.add.text(0, 0, 'Tutorial', {
@@ -430,6 +435,54 @@ export class StartScene extends Phaser.Scene {
         this.tutorialToggleContainer = container;
         this.tutorialToggleBox = box;
         this.tutorialToggleCheckmark = checkmark;
+    }
+
+    createSpeedrunToggleBelow(button) {
+        if (!button) return;
+
+        // Move the speedrun toggle slightly right to avoid overlap with other toggles
+        const container = this.add.container(button.x - 120, button.y + 68);
+
+        const checkboxSize = 32;
+        const label = this.add.text(0, 0, 'Speedrun', {
+            fontFamily: 'monospace',
+            fontSize: '28px',
+            color: '#f1c40f',
+            fontStyle: 'bold'
+        }).setOrigin(0.5, 0.5);
+
+        const box = this.add.rectangle(-80, 0, checkboxSize, checkboxSize, 0x000000, 0)
+            .setStrokeStyle(3, 0xf1c40f, 0.85)
+            .setOrigin(0.5);
+
+        const checkmark = this.add.text(box.x + 2, box.y - 2, '✔', {
+            fontFamily: 'monospace',
+            fontSize: '32px',
+            align: 'center',
+            color: '#f1c40f'
+        }).setOrigin(0.5);
+        checkmark.setVisible(this.isSpeedrunEnabled);
+
+        const hitArea = this.add.rectangle(0, 0, 220, 56, 0x000000, 0)
+            .setOrigin(0.5)
+            .setInteractive({ useHandCursor: true });
+
+        hitArea.on('pointerdown', () => {
+            this.isSpeedrunEnabled = !this.isSpeedrunEnabled;
+            checkmark.setVisible(this.isSpeedrunEnabled);
+        });
+        hitArea.on('pointerover', () => box.setFillStyle(0xf1c40f, 0.12));
+        hitArea.on('pointerout', () => box.setFillStyle(0x000000, 0));
+
+        container.add(hitArea);
+        container.add(box);
+        container.add(checkmark);
+        container.add(label);
+
+        this.add.existing(container);
+        this.speedrunToggleContainer = container;
+        this.speedrunToggleBox = box;
+        this.speedrunToggleCheckmark = checkmark;
     }
 
     toggleTutorialCheckbox() {

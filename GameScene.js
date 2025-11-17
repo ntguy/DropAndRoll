@@ -630,6 +630,7 @@ export class GameScene extends Phaser.Scene {
         this.tutorialEnabled = !!(data && data.tutorialEnabled);
         this.hardModeEnabled = !!(data && data.hardModeEnabled);
         this.nightmareModeEnabled = !!(data && data.nightmareModeEnabled);
+        this.speedrunEnabled = !!(data && data.speedrunEnabled);
         this.applyDifficultySettings();
         this.shownTutorialKeys = new Set();
         this.tutorialQueue = [];
@@ -805,6 +806,14 @@ export class GameScene extends Phaser.Scene {
 
         this.victoryScreen = new VictoryScreen(this);
         this.victoryScreen.create();
+
+        // Speedrun timer state
+        this._speedrunStartTime = null;
+        this._speedrunElapsed = 0;
+        this._speedrunRunning = false;
+        if (this.speedrunEnabled) {
+            this.startSpeedrunTimer();
+        }
 
         // --- Roll counter ---
         this.rollsRemainingText = this.add.text(110, CONSTANTS.BUTTONS_Y, `${CONSTANTS.DEFAULT_MAX_ROLLS}`, {
@@ -1426,6 +1435,36 @@ export class GameScene extends Phaser.Scene {
 
     update() {
         // Update logic here
+        if (this._speedrunRunning) {
+            const now = Date.now();
+            const elapsed = Math.max(0, Math.floor((now - (this._speedrunStartTime || now)) / 1000));
+            this._speedrunElapsed = elapsed;
+            if (this.speedrunTimerText && typeof this.speedrunTimerText.setText === 'function') {
+                const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const ss = String(elapsed % 60).padStart(2, '0');
+                this.speedrunTimerText.setText(`${mm}:${ss}`);
+                this.speedrunTimerText.setVisible(true);
+            }
+        }
+    }
+
+    startSpeedrunTimer() {
+        if (this._speedrunRunning) return;
+        this._speedrunStartTime = Date.now();
+        this._speedrunRunning = true;
+        if (this.speedrunTimerText) {
+            this.speedrunTimerText.setText('00:00');
+            this.speedrunTimerText.setVisible(true);
+        }
+    }
+
+    stopSpeedrunTimer() {
+        if (!this._speedrunRunning) return;
+        this._speedrunRunning = false;
+        if (this.speedrunTimerText) {
+            // leave final time visible
+            // optionally hide later
+        }
     }
 
     executeZoneEffects(effects, zone, { attackResult, defendResult } = {}) {
@@ -6515,6 +6554,10 @@ export class GameScene extends Phaser.Scene {
 
         if (defeatedIsBoss) {
             this.presentBossRelicReward();
+            // If this is the boss on map 3 (index 2), stop the speedrun timer
+            if (this.speedrunEnabled && typeof this.currentMapIndex === 'number' && this.currentMapIndex === 2) {
+                this.stopSpeedrunTimer();
+            }
             return;
         }
 
@@ -7057,6 +7100,10 @@ export class GameScene extends Phaser.Scene {
 
         if (this.victoryScreen) {
             this.victoryScreen.show();
+        }
+        // Ensure speedrun timer stops when victory screen is shown
+        if (this.speedrunEnabled) {
+            this.stopSpeedrunTimer();
         }
     }
 

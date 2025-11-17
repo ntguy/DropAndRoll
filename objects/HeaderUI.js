@@ -167,6 +167,16 @@ export function createHeaderUI(scene) {
     mapTitleText.setScrollFactor(0);
     container.add(mapTitleText);
 
+    // Speedrun timer (hidden by default)
+    // Positioned left of the header buttons with an extra left offset to avoid collisions
+    const SPEEDRUN_TIMER_OFFSET = 300; // px from right edge
+    const speedrunTimerText = scene.add.text(headerWidth - CONSTANTS.UI_MARGIN - SPEEDRUN_TIMER_OFFSET, headerHeight / 2, '', {
+        fontSize: '20px',
+        color: '#f1c40f'
+    }).setOrigin(0.5, 0.5).setVisible(false);
+    speedrunTimerText.setScrollFactor(0);
+    container.add(speedrunTimerText);
+
     const menuButton = createHeaderButton(scene, {
         label: '☰',
         x: headerWidth - CONSTANTS.UI_MARGIN,
@@ -255,6 +265,7 @@ export function createHeaderUI(scene) {
     scene.layoutHeaderButtons = layoutButtons;
     scene.mapTitleText = mapTitleText;
     scene.goldText = goldText;
+    scene.speedrunTimerText = speedrunTimerText;
 
     if (typeof scene.updateMapSkipButtonState === 'function') {
         scene.updateMapSkipButtonState();
